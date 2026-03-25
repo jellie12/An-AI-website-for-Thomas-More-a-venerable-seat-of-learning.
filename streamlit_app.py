@@ -98,6 +98,18 @@ def render_css() -> None:
             background: rgba(31,111,74,0.08) !important;
             border-radius: 10px !important;
           }
+          /* Make sure inner label text is also forced (Streamlit renders nested spans). */
+          div[data-baseweb="tablist"] button *{
+            color: inherit !important;
+          }
+          div[data-baseweb="tablist"] button[aria-selected="true"] *{
+            color: #16553a !important;
+          }
+          /* SVG icons (if any) sometimes keep a different fill color. */
+          div[data-baseweb="tablist"] button[aria-selected="true"] svg{
+            fill: #16553a !important;
+            color: #16553a !important;
+          }
 
           /* Override Streamlit's dark card backgrounds inside our wrappers */
           .wc-card, .wc-card *{

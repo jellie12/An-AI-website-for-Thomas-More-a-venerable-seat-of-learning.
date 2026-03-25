@@ -18,16 +18,16 @@ def render_css() -> None:
           :root{
             --brand:#1f6f4a;
             --brand-dark:#16553a;
-            --card:#ffffff;
-            --muted:#6b7280;
+            --card:#0f172a;
+            --muted:#9ca3af;
             --danger:#dc2626;
             --vulnerable:#f59e0b;
             --safe:#16a34a;
-            --bg:#f3f4f6;
+            --bg:#0b0f14;
           }
           html, body, .stApp {
             background: var(--bg) !important;
-            color: #111827 !important;
+            color: #e5e7eb !important;
           }
 
           .wc-header{
@@ -117,30 +117,7 @@ def render_css() -> None:
             color: inherit !important;
           }
 
-          /* Radio "tabs" styling (st.radio used for reliable visible labels) */
-          div[role="radiogroup"]{
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-          }
-          div[role="radiogroup"] *[role="radio"]{
-            border-radius: 999px !important;
-            border: 1px solid rgba(0,0,0,0.08) !important;
-            background: #f3f4f6 !important;
-            padding: 8px 14px !important;
-            color: #374151 !important;
-            font-weight: 700 !important;
-            box-shadow: none !important;
-          }
-          div[role="radiogroup"] *[role="radio"][aria-checked="true"]{
-            background: #16a34a !important;
-            border-color: rgba(31,111,74,0.35) !important;
-            color: #ffffff !important;
-          }
-          div[role="radiogroup"] *[role="radio"] *{
-            color: inherit !important;
-          }
+          /* Keep default st.radio button styling (so it matches your earlier look). */
         </style>
         """,
         unsafe_allow_html=True,

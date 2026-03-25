@@ -93,7 +93,7 @@ def render_css() -> None:
             color: #374151 !important;
           }
           div[data-baseweb="tablist"] button[aria-selected="true"]{
-            color: #16553a !important;
+            color: #ffffff !important;
             border: 1px solid rgba(31,111,74,0.25) !important;
             background: rgba(31,111,74,0.08) !important;
             border-radius: 10px !important;
@@ -103,12 +103,12 @@ def render_css() -> None:
             color: inherit !important;
           }
           div[data-baseweb="tablist"] button[aria-selected="true"] *{
-            color: #16553a !important;
+            color: #ffffff !important;
           }
           /* SVG icons (if any) sometimes keep a different fill color. */
           div[data-baseweb="tablist"] button[aria-selected="true"] svg{
-            fill: #16553a !important;
-            color: #16553a !important;
+            fill: #ffffff !important;
+            color: #ffffff !important;
           }
 
           /* Override Streamlit's dark card backgrounds inside our wrappers */

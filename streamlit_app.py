@@ -117,7 +117,39 @@ def render_css() -> None:
             color: inherit !important;
           }
 
-          /* Keep default st.radio button styling (so it matches your earlier look). */
+          /* st.radio "tab" styling (hover + selected) */
+          div[role="radiogroup"]{
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 6px 0 14px 0;
+          }
+          div[role="radiogroup"] label{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.14) !important;
+            background: rgba(255,255,255,0.04) !important;
+            color: #e5e7eb !important;
+            font-weight: 700 !important;
+            cursor: pointer;
+            transition: 120ms ease-in-out;
+          }
+          div[role="radiogroup"] label:hover{
+            border-color: rgba(31,111,74,0.95) !important;
+            background: rgba(31,111,74,0.12) !important;
+          }
+          div[role="radiogroup"] input[type="radio"]{
+            display: none !important;
+          }
+          /* Selected state (works in modern Chromium due to :has support). */
+          div[role="radiogroup"] label:has(input[type="radio"]:checked){
+            background: #16a34a !important;
+            border-color: rgba(22,163,74,0.95) !important;
+            color: #ffffff !important;
+          }
         </style>
         """,
         unsafe_allow_html=True,

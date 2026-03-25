@@ -228,54 +228,44 @@ st.markdown(
 )
 
 
-uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "webp"])
-
 if "analysis" not in st.session_state:
     st.session_state.analysis = None
 
 col_left, col_right = st.columns([1, 2])
 
 with col_left:
-    st.markdown('<div class="wc-card">', unsafe_allow_html=True)
-    st.markdown("### Upload an Animal Image")
-    st.markdown('<div class="wc-upload">', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("### Upload an Animal Image")
 
-    if uploaded_file is None:
-        st.write("Upload an image (JPG, PNG, WebP)")
-    else:
-        file_bytes = uploaded_file.read()
-        st.image(file_bytes, use_container_width=True, caption=uploaded_file.name)
+        uploaded_file = st.file_uploader(
+            "Upload an Animal Image",
+            type=["jpg", "jpeg", "png", "webp"],
+            label_visibility="collapsed",
+        )
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        file_bytes = None
+        if uploaded_file is not None:
+            file_bytes = uploaded_file.getvalue()
+            st.image(file_bytes, use_container_width=True, caption=uploaded_file.name)
+            st.caption(f"File size: {len(file_bytes) / 1024:.1f} KB")
 
-    btn_placeholder = st.empty()
-    if uploaded_file is not None:
-        if btn_placeholder.button("Analyze Animal"):
-            with st.spinner("Analyzing..."):
-                try:
-                    st.session_state.analysis = analyze_image(file_bytes, uploaded_file.name)
-                except Exception as e:
-                    st.session_state.analysis = {
-                        "not_animal": True,
-                        "message": f"Error analyzing image: {str(e)}",
-                    }
-    else:
-        st.button("Analyze Animal", disabled=True)
+        if uploaded_file is not None and st.button("Analyze Animal", type="primary"):
+                with st.spinner("Analyzing..."):
+                    try:
+                        st.session_state.analysis = analyze_image(file_bytes, uploaded_file.name)
+                    except Exception as e:
+                        st.session_state.analysis = {
+                            "not_animal": True,
+                            "message": f"Error analyzing image: {str(e)}",
+                        }
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # About card under upload (left column)
-    st.markdown('<div style="height:14px;"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="wc-card">', unsafe_allow_html=True)
-    st.markdown("### About SDG 15: Life on Land")
-    st.markdown(
-        """
-        Protect, restore and promote sustainable use of terrestrial ecosystems.
-        Sustainably manage forests, combat desertification, and halt and reverse land
-        degradation and halt biodiversity loss.
-        """.strip()
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("### About SDG 15: Life on Land")
+        st.write(
+            "Protect, restore and promote sustainable use of terrestrial ecosystems. "
+            "Sustainably manage forests, combat desertification, and halt and reverse land "
+            "degradation and halt biodiversity loss."
+        )
 
 with col_right:
     analysis = st.session_state.analysis
@@ -294,61 +284,53 @@ with col_right:
     conservation_status_raw = normalize_text_maybe(analysis.get("conservation_status"))
     pill_suffix, pill_label = status_to_pill(conservation_status_raw)
 
-    st.markdown('<div class="wc-card">', unsafe_allow_html=True)
-
-    st.markdown(f"<h2 style='margin-top:0;margin-bottom:6px;'>{animal_name}</h2>", unsafe_allow_html=True)
-    if scientific_name:
+    with st.container(border=True):
         st.markdown(
-            f"<div style='color:rgba(0,0,0,0.55); font-style:italic; margin-bottom:12px;'>{scientific_name}</div>",
+            f"<h2 style='margin-top:0;margin-bottom:6px;'>{animal_name}</h2>",
+            unsafe_allow_html=True,
+        )
+        if scientific_name:
+            st.markdown(
+                f"<div style='color:rgba(0,0,0,0.55); font-style:italic; margin-bottom:12px;'>{scientific_name}</div>",
+                unsafe_allow_html=True,
+            )
+
+        st.markdown(
+            f'<span class="wc-pill wc-pill-{pill_suffix}">{pill_label if pill_label else "Unknown Status"}</span>',
             unsafe_allow_html=True,
         )
 
-    st.markdown(
-        f'<span class="wc-pill wc-pill-{pill_suffix}">{pill_label if pill_label else "Unknown Status"}</span>',
-        unsafe_allow_html=True,
-    )
-
-    pop_row = st.columns(2)
-    with pop_row[0]:
-        st.markdown("#### Population Trend")
-        st.write(analysis.get("population_trend") or "Unknown")
-    with pop_row[1]:
-        st.markdown("#### Est. Population")
-        st.write(analysis.get("estimated_population") or "Unknown")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown('<div style="height:12px;"></div>', unsafe_allow_html=True)
+        pop_row = st.columns(2)
+        with pop_row[0]:
+            st.markdown("#### Population Trend")
+            st.write(analysis.get("population_trend") or "Unknown")
+        with pop_row[1]:
+            st.markdown("#### Est. Population")
+            st.write(analysis.get("estimated_population") or "Unknown")
 
     tabs = st.tabs(["Background", "Habitat & Threats", "SDG 15", "Conservation"])
 
     with tabs[0]:
-        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
-        st.markdown("### Background")
-        st.write(analysis.get("background") or "No information available.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("### Background")
+            st.write(analysis.get("background") or "No information available.")
 
     with tabs[1]:
-        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
-        st.markdown("### Habitat")
-        st.write(analysis.get("habitat") or "No information available.")
-        st.markdown("---")
-        st.markdown("### Threats")
-        threats = analysis.get("threats")
-        if isinstance(threats, list):
-            st.write(", ".join([str(t) for t in threats]))
-        else:
-            st.write(threats or "No information available.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("### Habitat")
+            st.write(analysis.get("habitat") or "No information available.")
+            st.divider()
+            st.markdown("### Threats")
+            threats = analysis.get("threats")
+            st.write(threats if threats else "No information available.")
 
     with tabs[2]:
-        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
-        st.markdown("### Connection to SDG 15: Life on Land")
-        st.write(analysis.get("sdg_connection") or "No information available.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("### Connection to SDG 15: Life on Land")
+            st.write(analysis.get("sdg_connection") or "No information available.")
 
     with tabs[3]:
-        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
-        st.markdown("### Conservation Efforts")
-        st.write(analysis.get("conservation_efforts") or "No information available.")
-        st.markdown("</div>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("### Conservation Efforts")
+            st.write(analysis.get("conservation_efforts") or "No information available.")
 

@@ -117,36 +117,22 @@ def render_css() -> None:
             color: inherit !important;
           }
 
-          /* st.radio "tab" styling (hover + selected underline, no pills) */
-          div[role="radiogroup"]{
-            display: flex;
-            gap: 22px;
-            flex-wrap: wrap;
-            margin: 0 0 14px 0;
-            align-items: center;
-          }
-          div[role="radiogroup"] label{
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 0;
-            border: none !important;
+          /* st.tabs styling (hover + selected underline) */
+          div[data-baseweb="tablist"] button{
             background: transparent !important;
             color: #e5e7eb !important;
-            font-weight: 700 !important;
-            cursor: pointer;
             border-bottom: 3px solid transparent !important;
-            transition: 120ms ease-in-out;
+            border-radius: 0 !important;
+            padding: 6px 0 !important;
           }
-          div[role="radiogroup"] label:hover{
+          div[data-baseweb="tablist"] button:hover{
             border-bottom-color: rgba(22,163,74,0.55) !important;
           }
-          div[role="radiogroup"] input[type="radio"]{
-            display: none !important;
+          div[data-baseweb="tablist"] button[aria-selected="true"]{
+            color: #ffffff !important;
+            border-bottom-color: #16a34a !important;
           }
-          /* Selected state (works in modern Chromium due to :has support). */
-          div[role="radiogroup"] label:has(input[type="radio"]:checked){
-            border-bottom-color: rgba(22,163,74,1) !important;
+          div[data-baseweb="tablist"] button[aria-selected="true"] *{
             color: #ffffff !important;
           }
         </style>
@@ -355,22 +341,14 @@ with col_right:
             st.write(analysis.get("estimated_population") or "Unknown")
 
     tab_labels = ["Background", "Habitat & Threats", "SDG 15", "Conservation"]
-    # Using st.radio (instead of st.tabs) because st.tabs styling varies across Streamlit themes.
-    active_tab = st.radio(
-        label="",
-        options=tab_labels,
-        horizontal=True,
-        index=tab_labels.index(st.session_state.get("active_tab", "Background")),
-        label_visibility="collapsed",
-    )
-    st.session_state.active_tab = active_tab
+    tabs = st.tabs(tab_labels)
 
-    if active_tab == "Background":
+    with tabs[0]:
         with st.container(border=True):
             st.markdown("### Background")
             st.write(analysis.get("background") or "No information available.")
 
-    elif active_tab == "Habitat & Threats":
+    with tabs[1]:
         with st.container(border=True):
             st.markdown("### Habitat")
             st.write(analysis.get("habitat") or "No information available.")
@@ -379,12 +357,12 @@ with col_right:
             threats = analysis.get("threats")
             st.write(threats if threats else "No information available.")
 
-    elif active_tab == "SDG 15":
+    with tabs[2]:
         with st.container(border=True):
             st.markdown("### Connection to SDG 15: Life on Land")
             st.write(analysis.get("sdg_connection") or "No information available.")
 
-    elif active_tab == "Conservation":
+    with tabs[3]:
         with st.container(border=True):
             st.markdown("### Conservation Efforts")
             st.write(analysis.get("conservation_efforts") or "No information available.")

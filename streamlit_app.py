@@ -25,7 +25,10 @@ def render_css() -> None:
             --safe:#16a34a;
             --bg:#f3f4f6;
           }
-          body { background: var(--bg); }
+          html, body, .stApp {
+            background: var(--bg) !important;
+            color: #111827 !important;
+          }
 
           .wc-header{
             background: linear-gradient(180deg, var(--brand), var(--brand-dark));
@@ -38,7 +41,7 @@ def render_css() -> None:
           .wc-subtitle{ color: rgba(255,255,255,0.85); font-size: 14px; }
 
           .wc-card{
-            background: var(--card);
+            background: var(--card) !important;
             border: 1px solid rgba(0,0,0,0.06);
             border-radius: 16px;
             padding: 18px;
@@ -83,6 +86,22 @@ def render_css() -> None:
           }
           .stButton > button:disabled{
             opacity: 0.6;
+          }
+
+          /* Tabs (Streamlit uses BaseWeb components) */
+          div[data-baseweb="tablist"] button{
+            color: #374151 !important;
+          }
+          div[data-baseweb="tablist"] button[aria-selected="true"]{
+            color: #16553a !important;
+            border: 1px solid rgba(31,111,74,0.25) !important;
+            background: rgba(31,111,74,0.08) !important;
+            border-radius: 10px !important;
+          }
+
+          /* Override Streamlit's dark card backgrounds inside our wrappers */
+          .wc-card, .wc-card *{
+            color: inherit !important;
           }
         </style>
         """,

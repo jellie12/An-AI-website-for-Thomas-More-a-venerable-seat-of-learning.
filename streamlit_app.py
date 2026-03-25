@@ -1,6 +1,5 @@
 import base64
 import json
-from io import BytesIO
 from typing import Any, Dict
 
 import streamlit as st
@@ -8,6 +7,110 @@ from groq import Groq
 
 
 DEFAULT_MODEL_ID = "meta-llama/llama-4-scout-17b-16e-instruct"
+
+st.set_page_config(page_title="Wildlife Scanner", layout="wide")
+
+
+def render_css() -> None:
+    st.markdown(
+        """
+        <style>
+          :root{
+            --brand:#1f6f4a;
+            --brand-dark:#16553a;
+            --card:#ffffff;
+            --muted:#6b7280;
+            --danger:#dc2626;
+            --vulnerable:#f59e0b;
+            --safe:#16a34a;
+            --bg:#f3f4f6;
+          }
+          body { background: var(--bg); }
+
+          .wc-header{
+            background: linear-gradient(180deg, var(--brand), var(--brand-dark));
+            color: white;
+            padding: 22px 26px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+          }
+          .wc-title{ font-size: 30px; font-weight: 800; margin-bottom: 4px; }
+          .wc-subtitle{ color: rgba(255,255,255,0.85); font-size: 14px; }
+
+          .wc-card{
+            background: var(--card);
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+          }
+          .wc-upload{
+            border: 2px dashed rgba(31,111,74,0.25);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            background: rgba(31,111,74,0.03);
+          }
+
+          .wc-pill{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            border-radius: 999px;
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.2px;
+          }
+          .wc-pill-danger{ background: var(--danger); }
+          .wc-pill-vulnerable{ background: var(--vulnerable); }
+          .wc-pill-safe{ background: var(--safe); }
+          .wc-pill-neutral{ background: #6b7280; }
+
+          /* Streamlit buttons */
+          .stButton > button{
+            width: 100%;
+            background: var(--brand) !important;
+            color: white !important;
+            font-weight: 800 !important;
+            border-radius: 12px !important;
+            border: none !important;
+            padding: 10px 14px !important;
+          }
+          .stButton > button:hover{
+            background: var(--brand-dark) !important;
+          }
+          .stButton > button:disabled{
+            opacity: 0.6;
+          }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def status_to_pill(status: str | None) -> tuple[str, str]:
+    """
+    Returns (pill_class_suffix, label) for the conservation status.
+    """
+    if not status:
+        return ("neutral", "Unknown Status")
+    s = status.lower()
+    if "critically" in s or "endangered" in s:
+        # Treat "Endangered" and "Critically Endangered" as danger.
+        return ("danger", status)
+    if "vulnerable" in s or "near threatened" in s:
+        return ("vulnerable", status)
+    return ("safe", status)
+
+
+def normalize_text_maybe(value: Any) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value.strip() or None
+    return str(value).strip() or None
 
 
 def parse_response(text: str) -> Dict[str, Any]:
@@ -49,12 +152,18 @@ def build_prompt() -> str:
 
 
 def analyze_image(image_bytes: bytes, filename: str | None) -> Dict[str, Any]:
-    api_key = st.secrets["GROQ_API_KEY"]
-
     try:
-        model_id = st.secrets["GROQ_VISION_MODEL"]
+        api_key = st.secrets["GROQ_API_KEY"]
+    except Exception as e:
+        raise RuntimeError(
+            "Missing Streamlit secret `GROQ_API_KEY`. Go to Streamlit Cloud → Secrets and add it (TOML format)."
+        ) from e
+
+    model_id = DEFAULT_MODEL_ID
+    try:
+        model_id = st.secrets["GROQ_VISION_MODEL"]  # optional
     except Exception:
-        model_id = DEFAULT_MODEL_ID
+        pass
 
     file_ext = "jpg"
     if filename and "." in filename:
@@ -84,13 +193,23 @@ def analyze_image(image_bytes: bytes, filename: str | None) -> Dict[str, Any]:
     result_text = response.choices[0].message.content
     return parse_response(result_text)
 
+render_css()
 
-st.set_page_config(page_title="Wildlife Scanner", layout="wide")
+st.markdown(
+    """
+    <div class="wc-header">
+      <div class="wc-title">Wildlife Scanner</div>
+      <div class="wc-subtitle">Identify animals and learn about their conservation status and SDG 15 connection.</div>
+      <div style="margin-top:10px;">
+        <span class="wc-pill wc-pill-safe">SDG 15: Life on Land</span>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-st.title("Wildlife Scanner")
-st.caption("Identify animals and learn about their conservation status and SDG 15 connection.")
 
-uploaded_file = st.file_uploader("Upload an Animal Image", type=["jpg", "jpeg", "png", "webp"])
+uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "webp"])
 
 if "analysis" not in st.session_state:
     st.session_state.analysis = None
@@ -98,11 +217,21 @@ if "analysis" not in st.session_state:
 col_left, col_right = st.columns([1, 2])
 
 with col_left:
-    if uploaded_file is not None:
+    st.markdown('<div class="wc-card">', unsafe_allow_html=True)
+    st.markdown("### Upload an Animal Image")
+    st.markdown('<div class="wc-upload">', unsafe_allow_html=True)
+
+    if uploaded_file is None:
+        st.write("Upload an image (JPG, PNG, WebP)")
+    else:
         file_bytes = uploaded_file.read()
         st.image(file_bytes, use_container_width=True, caption=uploaded_file.name)
 
-        if st.button("Analyze Animal", type="primary", use_container_width=True):
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    btn_placeholder = st.empty()
+    if uploaded_file is not None:
+        if btn_placeholder.button("Analyze Animal"):
             with st.spinner("Analyzing..."):
                 try:
                     st.session_state.analysis = analyze_image(file_bytes, uploaded_file.name)
@@ -111,41 +240,96 @@ with col_left:
                         "not_animal": True,
                         "message": f"Error analyzing image: {str(e)}",
                     }
+    else:
+        st.button("Analyze Animal", disabled=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # About card under upload (left column)
+    st.markdown('<div style="height:14px;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="wc-card">', unsafe_allow_html=True)
+    st.markdown("### About SDG 15: Life on Land")
+    st.markdown(
+        """
+        Protect, restore and promote sustainable use of terrestrial ecosystems.
+        Sustainably manage forests, combat desertification, and halt and reverse land
+        degradation and halt biodiversity loss.
+        """.strip()
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 with col_right:
     analysis = st.session_state.analysis
     if not analysis:
-        st.info("Upload an image of any animal to learn about its conservation status and how it connects to SDG 15.")
+        st.info(
+            "Upload an image of any animal to learn about its conservation status and how it connects to SDG 15."
+        )
         st.stop()
 
     if analysis.get("not_animal"):
         st.error(analysis.get("message") or "Please upload an image containing an animal.")
         st.stop()
 
-    animal_name = analysis.get("animal_name") or "Unknown Animal"
-    scientific_name = analysis.get("scientific_name") or ""
-    conservation_status = analysis.get("conservation_status") or "Unknown Status"
+    animal_name = normalize_text_maybe(analysis.get("animal_name")) or "Unknown Animal"
+    scientific_name = normalize_text_maybe(analysis.get("scientific_name")) or ""
+    conservation_status_raw = normalize_text_maybe(analysis.get("conservation_status"))
+    pill_suffix, pill_label = status_to_pill(conservation_status_raw)
 
-    st.subheader(animal_name)
+    st.markdown('<div class="wc-card">', unsafe_allow_html=True)
+
+    st.markdown(f"<h2 style='margin-top:0;margin-bottom:6px;'>{animal_name}</h2>", unsafe_allow_html=True)
     if scientific_name:
-        st.caption(scientific_name)
+        st.markdown(
+            f"<div style='color:rgba(0,0,0,0.55); font-style:italic; margin-bottom:12px;'>{scientific_name}</div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        f'<span class="wc-pill wc-pill-{pill_suffix}">{pill_label if pill_label else "Unknown Status"}</span>',
+        unsafe_allow_html=True,
+    )
+
+    pop_row = st.columns(2)
+    with pop_row[0]:
+        st.markdown("#### Population Trend")
+        st.write(analysis.get("population_trend") or "Unknown")
+    with pop_row[1]:
+        st.markdown("#### Est. Population")
+        st.write(analysis.get("estimated_population") or "Unknown")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('<div style="height:12px;"></div>', unsafe_allow_html=True)
 
     tabs = st.tabs(["Background", "Habitat & Threats", "SDG 15", "Conservation"])
 
     with tabs[0]:
+        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
+        st.markdown("### Background")
         st.write(analysis.get("background") or "No information available.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with tabs[1]:
-        st.write("### Habitat")
+        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
+        st.markdown("### Habitat")
         st.write(analysis.get("habitat") or "No information available.")
-        st.write("### Threats")
-        st.write(analysis.get("threats") or "No information available.")
+        st.markdown("---")
+        st.markdown("### Threats")
+        threats = analysis.get("threats")
+        if isinstance(threats, list):
+            st.write(", ".join([str(t) for t in threats]))
+        else:
+            st.write(threats or "No information available.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with tabs[2]:
-        st.write("### Connection to SDG 15: Life on Land")
+        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
+        st.markdown("### Connection to SDG 15: Life on Land")
         st.write(analysis.get("sdg_connection") or "No information available.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with tabs[3]:
-        st.write("### Conservation Efforts")
+        st.markdown('<div class="wc-card">', unsafe_allow_html=True)
+        st.markdown("### Conservation Efforts")
         st.write(analysis.get("conservation_efforts") or "No information available.")
+        st.markdown("</div>", unsafe_allow_html=True)
 

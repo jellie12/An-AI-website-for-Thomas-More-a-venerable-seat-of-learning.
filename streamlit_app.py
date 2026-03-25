@@ -116,6 +116,31 @@ def render_css() -> None:
           .wc-card, .wc-card *{
             color: inherit !important;
           }
+
+          /* Radio "tabs" styling (st.radio used for reliable visible labels) */
+          div[role="radiogroup"]{
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+          }
+          div[role="radiogroup"] *[role="radio"]{
+            border-radius: 999px !important;
+            border: 1px solid rgba(0,0,0,0.08) !important;
+            background: #f3f4f6 !important;
+            padding: 8px 14px !important;
+            color: #374151 !important;
+            font-weight: 700 !important;
+            box-shadow: none !important;
+          }
+          div[role="radiogroup"] *[role="radio"][aria-checked="true"]{
+            background: #16a34a !important;
+            border-color: rgba(31,111,74,0.35) !important;
+            color: #ffffff !important;
+          }
+          div[role="radiogroup"] *[role="radio"] *{
+            color: inherit !important;
+          }
         </style>
         """,
         unsafe_allow_html=True,
@@ -322,12 +347,11 @@ with col_right:
             st.write(analysis.get("estimated_population") or "Unknown")
 
     tab_labels = ["Background", "Habitat & Threats", "SDG 15", "Conservation"]
-    # Streamlit's built-in `st.tabs` styling is hard to control cross-themes, so use `st.radio`
-    # to guarantee text stays visible.
+    # Using st.radio (instead of st.tabs) because st.tabs styling varies across Streamlit themes.
     active_tab = st.radio(
         label="",
         options=tab_labels,
-        horizontal=False,
+        horizontal=True,
         index=tab_labels.index(st.session_state.get("active_tab", "Background")),
         label_visibility="collapsed",
     )

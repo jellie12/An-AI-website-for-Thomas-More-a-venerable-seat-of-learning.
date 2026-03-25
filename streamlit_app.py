@@ -91,11 +91,12 @@ def render_css() -> None:
           /* Tabs (Streamlit uses BaseWeb components) */
           div[data-baseweb="tablist"] button{
             color: #374151 !important;
+            background: transparent !important;
           }
           div[data-baseweb="tablist"] button[aria-selected="true"]{
             color: #ffffff !important;
             border: 1px solid rgba(31,111,74,0.25) !important;
-            background: rgba(31,111,74,0.08) !important;
+            background: #16a34a !important;
             border-radius: 10px !important;
           }
           /* Make sure inner label text is also forced (Streamlit renders nested spans). */

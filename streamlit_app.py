@@ -321,14 +321,24 @@ with col_right:
             st.markdown("#### Est. Population")
             st.write(analysis.get("estimated_population") or "Unknown")
 
-    tabs = st.tabs(["Background", "Habitat & Threats", "SDG 15", "Conservation"])
+    tab_labels = ["Background", "Habitat & Threats", "SDG 15", "Conservation"]
+    # Streamlit's built-in `st.tabs` styling is hard to control cross-themes, so use `st.radio`
+    # to guarantee text stays visible.
+    active_tab = st.radio(
+        label="",
+        options=tab_labels,
+        horizontal=False,
+        index=tab_labels.index(st.session_state.get("active_tab", "Background")),
+        label_visibility="collapsed",
+    )
+    st.session_state.active_tab = active_tab
 
-    with tabs[0]:
+    if active_tab == "Background":
         with st.container(border=True):
             st.markdown("### Background")
             st.write(analysis.get("background") or "No information available.")
 
-    with tabs[1]:
+    elif active_tab == "Habitat & Threats":
         with st.container(border=True):
             st.markdown("### Habitat")
             st.write(analysis.get("habitat") or "No information available.")
@@ -337,12 +347,12 @@ with col_right:
             threats = analysis.get("threats")
             st.write(threats if threats else "No information available.")
 
-    with tabs[2]:
+    elif active_tab == "SDG 15":
         with st.container(border=True):
             st.markdown("### Connection to SDG 15: Life on Land")
             st.write(analysis.get("sdg_connection") or "No information available.")
 
-    with tabs[3]:
+    elif active_tab == "Conservation":
         with st.container(border=True):
             st.markdown("### Conservation Efforts")
             st.write(analysis.get("conservation_efforts") or "No information available.")
